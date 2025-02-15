@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Scoreboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            color: white;
+            text-align: center;
+        }
+        body.dark-mode {
+            background: linear-gradient(to right, #232526, #414345);
+            color: white;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+        h2, h3 {
+            color: #fff;
+        }
+        .hidden {
+            display: none;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .score-container {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        .team {
+            width: 45%;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .team h3 {
+            background: #ffcc00;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .players-list {
+            list-style: none;
+            padding: 0;
+        }
+        .players-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            background: white;
+            color: black;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="setup">
+        <button onclick="toggleDarkMode()" style="position: absolute; top: 10px; right: 10px;">Dark Mode</button>
+        
+        <h2>Create a Match</h2>
+        <input type="text" id="team-name-create" placeholder="Enter Team Name">
+        <input type="text" id="match-passcode" placeholder="Enter Match Passcode">
+        <button onclick="createMatch()">Create Match</button>
+        
+        <h2>Join a Match</h2>
+        <input type="text" id="passcode" placeholder="Enter Match Passcode">
+        <input type="text" id="team-name-join" placeholder="Enter Team Name">
+        <button onclick="joinMatch()">Join</button>
+    </div>
+    
+    <div id="scoreboard" class="hidden">
+        <h2>Scoreboard</h2>
+        <div class="score-container">
+            <div class="team">
+                <h3 id="team-a-name"></h3>
+                <p>Total Score: <span id="team-a-score">0</span></p>
+                <ul id="team-a-players" class="players-list"></ul>
+                <input type="text" id="team-a-player" placeholder="Add Player">
+                <button onclick="addPlayer('A')">Add Player</button>
+            </div>
+            <div class="team">
+                <h3 id="team-b-name"></h3>
+                <p>Total Score: <span id="team-b-score">0</span></p>
+                <ul id="team-b-players" class="players-list"></ul>
+                <input type="text" id="team-b-player" placeholder="Add Player">
+                <button onclick="addPlayer('B')">Add Player</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let match = { teamA: { name: '', score: 0, players: [] }, teamB: { name: '', score: 0, players: [] }, passcode: '', teamBJoined: false };
+        
+        function createMatch() {
+            match.teamA.name = document.getElementById("team-name-create").value;
+            match.passcode = document.getElementById("match-passcode").value;
+            alert("Waiting for the opponent to join...");
+        }
+        
+        function joinMatch() {
+            let enteredPasscode = document.getElementById("passcode").value;
+            if (enteredPasscode === match.passcode) {
+                match.teamB.name = document.getElementById("team-name-join").value;
+                match.teamBJoined = true;
+                document.getElementById("setup").classList.add("hidden");
+                document.getElementById("scoreboard").classList.remove("hidden");
+                document.getElementById("team-a-name").innerText = match.teamA.name;
+                document.getElementById("team-b-name").innerText = match.teamB.name;
+            } else {
+                alert("Incorrect Passcode!");
+            }
+        }
+        
+        function addPlayer(team) {
+            let playerName = document.getElementById(`team-${team.toLowerCase()}-player`).value;
+            if (playerName) {
+                let teamObj = match[team === 'A' ? 'teamA' : 'teamB'];
+                teamObj.players.push({ name: playerName, score: 0 });
+                let list = document.getElementById(`team-${team.toLowerCase()}-players`);
+                let li = document.createElement("li");
+                li.innerHTML = `${playerName} (<span id="${team}-${playerName}-score">0</span>) <button onclick="requestPoint('${team}', '${playerName}')">+</button>`;
+                list.appendChild(li);
+            }
+        }
+        
+        function requestPoint(team, playerName) {
+            let confirmAction = confirm("Opponent won this tangle. Accept?");
+            if (confirmAction) {
+                let teamObj = match[team === 'A' ? 'teamA' : 'teamB'];
+                teamObj.score++;
+                teamObj.players.find(player => player.name === playerName).score++;
+                document.getElementById(`team-${team.toLowerCase()}-score`).innerText = teamObj.score;
+                document.getElementById(`${team}-${playerName}-score`).innerText = teamObj.players.find(player => player.name === playerName).score;
+            }
+        }
+    </script>
+</body>
+</html>
